@@ -94,6 +94,10 @@
 							"ds_DnA_spoList_Name": {
 								"value": "@pipeline().parameters.pl_par_DnA_spoList_name",
 								"type": "Expression"
+							},
+							"ds_par_spo_site": {
+								"value": "@pipeline().parameters.pl_par_SPO_site",
+								"type": "Expression"
 							}
 						}
 					}
