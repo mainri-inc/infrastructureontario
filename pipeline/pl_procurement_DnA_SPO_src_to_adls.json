@@ -143,7 +143,11 @@
 									"type": "BinarySource",
 									"storeSettings": {
 										"type": "HttpReadSettings",
-										"requestMethod": "GET"
+										"requestMethod": "GET",
+										"additionalHeaders": {
+											"value": "@{concat('Authorization: Bearer '\n,activity('Get_SPO_Token').output.access_token\n)}",
+											"type": "Expression"
+										}
 									},
 									"formatSettings": {
 										"type": "BinaryReadSettings"
@@ -154,7 +158,13 @@
 							"inputs": [
 								{
 									"referenceName": "ds_spo_src",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"RelativeURL": {
+											"value": "@{\n    concat(\n        item().Path\n        ,'/'\n        ,item().Name\n    )\n}",
+											"type": "Expression"
+										}
+									}
 								}
 							]
 						}
