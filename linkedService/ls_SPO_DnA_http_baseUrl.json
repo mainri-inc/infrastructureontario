@@ -1,0 +1,26 @@
+{
+	"name": "ls_SPO_DnA_http_baseUrl",
+	"properties": {
+		"description": "\"SharePoint List \" linked Services, dynamically point to     'https://infrastructureontario.sharepoint.com/sites/' + certain department's SPO site ",
+		"parameters": {
+			"ls_siteName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "SharePointOnlineList",
+		"typeProperties": {
+			"siteUrl": "@{concat(\n    'https://infrastructureontario.sharepoint.com/sites/'\n    , linkedService().ls_siteName\n)}",
+			"tenantId": "b4e0dd60-8ef5-4e7d-b911-0bd199ec4b8e",
+			"servicePrincipalId": "186a9efb-4fc7-4002-8ce2-7844ce804df5",
+			"servicePrincipalKey": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "AzureKeyVault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "secret-value"
+			}
+		}
+	}
+}
