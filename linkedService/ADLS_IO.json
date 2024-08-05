@@ -1,0 +1,19 @@
+{
+	"name": "ADLS_IO",
+	"properties": {
+		"parameters": {
+			"DataLakehouseStorageAccount": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "@{concat('https://',linkedService().DataLakehouseStorageAccount,'.dfs.core.windows.net/')}"
+		},
+		"connectVia": {
+			"referenceName": "AutoResolveIntegrationRuntime",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
