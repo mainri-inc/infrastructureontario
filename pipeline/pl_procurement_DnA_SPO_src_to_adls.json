@@ -89,7 +89,13 @@
 					},
 					"dataset": {
 						"referenceName": "ds_DnA_spo_sources_array",
-						"type": "DatasetReference"
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_DnA_spoList_Name": {
+								"value": "@pipeline().parameters.pl_par_DnA_spoList_name",
+								"type": "Expression"
+							}
+						}
 					}
 				}
 			}
