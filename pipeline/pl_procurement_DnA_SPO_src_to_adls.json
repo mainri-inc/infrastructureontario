@@ -156,6 +156,12 @@
 										"type": "BinaryReadSettings"
 									}
 								},
+								"sink": {
+									"type": "BinarySink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									}
+								},
 								"enableStaging": false
 							},
 							"inputs": [
@@ -169,6 +175,26 @@
 										},
 										"ls_par_SPO_site": {
 											"value": "@pipeline().parameters.pl_par_SPO_site",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_adls_dst",
+									"type": "DatasetReference",
+									"parameters": {
+										"storage_Account": {
+											"value": "@pipeline().parameters.pl_adls_storage_account",
+											"type": "Expression"
+										},
+										"ds_par_dstpath": {
+											"value": "@pipeline().parameters.pl_par_ADLS_dst_Path",
+											"type": "Expression"
+										},
+										"ds_par_dst_filename": {
+											"value": "@{\n replace(\n        replace(\n            concat(\n                item().path\n                , '/'\n                , item().Name\n            )\n            , 'sites', formatDateTime(convertTimeZone(utcNow(),'UTC' ,'Eastern Standard Time' ),'yyyy-MM-dd')\n        )\n    ,' '\n    ,'_'\n )\n}",
 											"type": "Expression"
 										}
 									}
