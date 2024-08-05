@@ -104,6 +104,27 @@
 					},
 					"firstRowOnly": false
 				}
+			},
+			{
+				"name": "Traversing_SPO_Directory",
+				"description": "Traversing interest SPO items",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup_DnA_spo_Sources_array",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup_DnA_spo_Sources_array').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true
+				}
 			}
 		],
 		"parameters": {
