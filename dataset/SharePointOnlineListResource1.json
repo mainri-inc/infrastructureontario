@@ -3,10 +3,30 @@
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "ls_SPO_DnA_http_baseUrl",
-			"type": "LinkedServiceReference"
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"ls_siteName": {
+					"value": "@dataset().ds_par_spo_site",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"ds_DnA_spoList_Name": {
+				"type": "string"
+			},
+			"ds_par_spo_site": {
+				"type": "string"
+			}
 		},
 		"annotations": [],
 		"type": "SharePointOnlineListResource",
-		"schema": []
+		"schema": [],
+		"typeProperties": {
+			"listName": {
+				"value": "@dataset().ds_DnA_spoList_Name",
+				"type": "Expression"
+			}
+		}
 	}
 }
