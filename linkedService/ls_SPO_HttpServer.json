@@ -1,0 +1,25 @@
+{
+	"name": "ls_SPO_HttpServer",
+	"properties": {
+		"description": "HTTP - Binary type linked service. Dynamic point to SharePoint HTTP Server",
+		"parameters": {
+			"ls_par_SPO_site": {
+				"type": "string"
+			},
+			"ls_RelativeURL": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "HttpServer",
+		"typeProperties": {
+			"url": "@{concat(\n'https://infrastructureontario.sharepoint.com/sites/'\n,linkedService().ls_par_SPO_site\n,'/_api/web/GetFileByServerRelativeUrl('''\n,linkedService().ls_RelativeURL\n,''')/$value'\n)}",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		},
+		"connectVia": {
+			"referenceName": "AutoResolveIntegrationRuntime",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
