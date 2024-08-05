@@ -1,5 +1,5 @@
 {
-	"name": "SharePointOnlineListResource1",
+	"name": "ds_DnA_spo_sources_array",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "ls_SPO_DnA_http_baseUrl",
