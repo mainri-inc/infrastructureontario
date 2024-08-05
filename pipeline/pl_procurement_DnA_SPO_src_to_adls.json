@@ -85,6 +85,7 @@
 				"typeProperties": {
 					"source": {
 						"type": "SharePointOnlineListSource",
+						"query": "@{concat('$filter=ContentType eq ','''Document'''\n, ' and IsCurrentVersion eq '\n, 'true'\n)}\n",
 						"httpRequestTimeout": "00:05:00"
 					},
 					"dataset": {
@@ -100,7 +101,8 @@
 								"type": "Expression"
 							}
 						}
-					}
+					},
+					"firstRowOnly": false
 				}
 			}
 		],
