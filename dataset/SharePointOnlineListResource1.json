@@ -1,0 +1,12 @@
+{
+	"name": "SharePointOnlineListResource1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_SPO_DnA_http_baseUrl",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "SharePointOnlineListResource",
+		"schema": []
+	}
+}

@@ -61,6 +61,37 @@
 						"type": "Expression"
 					}
 				}
+			},
+			{
+				"name": "Lookup_DnA_spo_Sources_array",
+				"description": "Generate a array of interest SharePoint items. what items need to ingest then sink to ADLS",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Get_SPO_Token",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SharePointOnlineListSource",
+						"httpRequestTimeout": "00:05:00"
+					},
+					"dataset": {
+						"referenceName": "SharePointOnlineListResource1",
+						"type": "DatasetReference"
+					}
+				}
 			}
 		],
 		"parameters": {
