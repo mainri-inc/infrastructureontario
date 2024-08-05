@@ -88,7 +88,7 @@
 						"httpRequestTimeout": "00:05:00"
 					},
 					"dataset": {
-						"referenceName": "SharePointOnlineListResource1",
+						"referenceName": "ds_DnA_spo_sources_array",
 						"type": "DatasetReference"
 					}
 				}
