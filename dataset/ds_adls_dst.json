@@ -1,0 +1,41 @@
+{
+	"name": "ds_adls_dst",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_IO",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"DataLakehouseStorageAccount": {
+					"value": "@dataset().storage_Account",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"storage_Account": {
+				"type": "string"
+			},
+			"ds_par_dstpath": {
+				"type": "string"
+			},
+			"ds_par_dst_filename": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().ds_par_dst_filename",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().ds_par_dstpath",
+					"type": "Expression"
+				}
+			}
+		}
+	}
+}
