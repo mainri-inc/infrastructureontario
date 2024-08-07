@@ -1,0 +1,24 @@
+{
+	"name": "SPO_ITDataGovernanceWorkgroup",
+	"properties": {
+		"annotations": [],
+		"type": "SharePointOnlineList",
+		"typeProperties": {
+			"siteUrl": "https://infrastructureontario.sharepoint.com/sites/ITDataGovernanceWorkgroup",
+			"tenantId": "b4e0dd60-8ef5-4e7d-b911-0bd199ec4b8e",
+			"servicePrincipalId": "ee0d5326-d204-426c-a1cc-ca06284ab897",
+			"servicePrincipalKey": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "AzureKeyVault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "secret-value"
+			}
+		},
+		"connectVia": {
+			"referenceName": "AutoResolveIntegrationRuntime",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
