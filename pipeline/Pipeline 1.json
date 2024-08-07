@@ -1,0 +1,9 @@
+{
+	"name": "Pipeline 1",
+	"properties": {
+		"folder": {
+			"name": "IO_procurement"
+		},
+		"annotations": []
+	}
+}

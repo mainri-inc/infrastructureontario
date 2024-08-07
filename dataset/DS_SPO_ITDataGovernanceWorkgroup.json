@@ -1,0 +1,23 @@
+{
+	"name": "DS_SPO_ITDataGovernanceWorkgroup",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SPO_ITDataGovernanceWorkgroup",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"List": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "SharePointOnlineListResource",
+		"schema": [],
+		"typeProperties": {
+			"listName": {
+				"value": "@dataset().List",
+				"type": "Expression"
+			}
+		}
+	}
+}
