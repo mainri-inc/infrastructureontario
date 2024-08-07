@@ -3,33 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Get_Client_Secret",
-				"description": "get client's secret value from Key-vault.\nwill use this secret value to build URL when get SharePoint access token",
-				"type": "WebActivity",
-				"dependsOn": [],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"method": "GET",
-					"url": {
-						"value": "@{concat(\n    pipeline().parameters.pl_par_KeyVault_URL\n    , '/secrets/'\n    , pipeline().parameters.pl_par_keyVault_SecretsName\n    , '?api-version=7.0'\n)}",
-						"type": "Expression"
-					},
-					"authentication": {
-						"type": "MSI",
-						"resource": "https://vault.azure.net"
-					}
-				}
-			},
-			{
 				"name": "Get_SPO_Token",
-				"description": "For downstream activities access SharePoint site, have to have SharePoint token.",
 				"type": "WebActivity",
 				"dependsOn": [
 					{
@@ -53,22 +27,25 @@
 						"Content-Type": "application/x-www-form-urlencoded"
 					},
 					"url": {
-						"value": "@{concat('https://accounts.accesscontrol.windows.net/'\n,pipeline().parameters.pl_par_Tenant_id\n,'/tokens/OAuth/2'\n)}",
+						"value": "@{concat('https://accounts.accesscontrol.windows.net/'\n,json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_Tenant_id\n,'/tokens/OAuth/2'\n)}",
 						"type": "Expression"
 					},
+					"connectVia": {
+						"referenceName": "AutoResolveIntegrationRuntime",
+						"type": "IntegrationRuntimeReference"
+					},
 					"body": {
-						"value": "@{concat('grant_type=client_credentials&client_id='\n, pipeline().parameters.pl_par_Client_id\n, '@'\n, pipeline().parameters.pl_par_Tenant_id\n,'&client_secret='\n, activity('Get_Client_Secret').output.value\n, '&resource=00000003-0000-0ff1-ce00-000000000000/infrastructureontario.sharepoint.com@'\n, pipeline().parameters.pl_par_Tenant_id\n)}",
+						"value": "@{concat('grant_type=client_credentials&client_id='\n, json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_Client_id\n\n, '@'\n\n, json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_Tenant_id\n\n,'&client_secret='\n\n, activity('Get_Client_Secret').output.value\n\n, '&resource=00000003-0000-0ff1-ce00-000000000000/infrastructureontario.sharepoint.com@'\n\n, json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_Tenant_id\n\n)}",
 						"type": "Expression"
 					}
 				}
 			},
 			{
-				"name": "Lookup_DnA_spo_Sources_array",
-				"description": "Generate a array of interest SharePoint items. what items need to ingest then sink to ADLS",
-				"type": "Lookup",
+				"name": "Get_Client_Secret",
+				"type": "WebActivity",
 				"dependsOn": [
 					{
-						"activity": "Get_SPO_Token",
+						"activity": "lkp metadata of Source to Landing from SPO",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -83,34 +60,23 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"source": {
-						"type": "SharePointOnlineListSource",
-						"query": {
-							"value": "@{concat('$filter=ContentType eq ','''Document'''\n, ' and IsCurrentVersion eq '\n, 'true'\n)}\n",
-							"type": "Expression"
-						},
-						"httpRequestTimeout": "00:05:00"
+					"method": "GET",
+					"url": {
+						"value": "@{concat(\n    concat(\n        json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_KeyVault_URL\n    , '/secrets/'\n        )\n\t,\n    json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_keyVault_SecretsName \n    , '?api-version=7.0'\n)}",
+						"type": "Expression"
 					},
-					"dataset": {
-						"referenceName": "ds_DnA_spo_sources_array",
-						"type": "DatasetReference",
-						"parameters": {
-							"ds_DnA_spoList_Name": {
-								"value": "@pipeline().parameters.pl_par_DnA_spoList_name",
-								"type": "Expression"
-							},
-							"ds_par_spo_site": {
-								"value": "@pipeline().parameters.pl_par_SPO_site",
-								"type": "Expression"
-							}
-						}
+					"connectVia": {
+						"referenceName": "AutoResolveIntegrationRuntime",
+						"type": "IntegrationRuntimeReference"
 					},
-					"firstRowOnly": false
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://vault.azure.net"
+					}
 				}
 			},
 			{
 				"name": "Traversing_SPO_Directory",
-				"description": "Traversing interest SPO items",
 				"type": "ForEach",
 				"dependsOn": [
 					{
@@ -130,7 +96,6 @@
 					"activities": [
 						{
 							"name": "dumping_source_from_spo_to_adls",
-							"description": "copy interest SharePoint items sink to ADLS",
 							"type": "Copy",
 							"dependsOn": [],
 							"policy": {
@@ -150,7 +115,8 @@
 										"additionalHeaders": {
 											"value": "@{concat('Authorization: Bearer '\n,activity('Get_SPO_Token').output.access_token\n)}",
 											"type": "Expression"
-										}
+										},
+										"requestTimeout": ""
 									},
 									"formatSettings": {
 										"type": "BinaryReadSettings"
@@ -174,7 +140,7 @@
 											"type": "Expression"
 										},
 										"ls_par_SPO_site": {
-											"value": "@pipeline().parameters.pl_par_SPO_site",
+											"value": "@json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_SPO_site",
 											"type": "Expression"
 										}
 									}
@@ -186,15 +152,15 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"storage_Account": {
-											"value": "@pipeline().parameters.pl_adls_storage_account",
+											"value": "@json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_adls_storage_account",
 											"type": "Expression"
 										},
 										"ds_par_dstpath": {
-											"value": "@pipeline().parameters.pl_par_ADLS_dst_Path",
+											"value": "@json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_ADLS_dst_Path",
 											"type": "Expression"
 										},
 										"ds_par_dst_filename": {
-											"value": "@{\n replace(\n        replace(\n            concat(\n                item().path\n                , '/'\n                , item().Name\n            )\n            , 'sites', formatDateTime(convertTimeZone(utcNow(),'UTC' ,'Eastern Standard Time' ),'yyyy-MM-dd')\n        )\n    ,' '\n    ,'_'\n )\n}",
+											"value": "@{\n\n        replace(\n            concat(\n                'rundate='\n                , formatDateTime(convertTimeZone(utcNow(),'UTC' ,'Eastern Standard Time' ),'yyyy-MM-dd')\n                , item().path\n                , '/'\n                , item().Name\n\n            )\n            , '/sites', ''\n        )\n\n}",
 											"type": "Expression"
 										}
 									}
@@ -203,52 +169,93 @@
 						}
 					]
 				}
+			},
+			{
+				"name": "Lookup_DnA_spo_Sources_array",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Get_SPO_Token",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SharePointOnlineListSource",
+						"query": {
+							"value": "@concat('$filter=ContentType eq ','''Document'''\n, ' and '\n,'Modified ge datetime'''\n,formatDateTime(addDays(utcNow()\n,json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_Inspecting_Offset_Day),'yyyy-MM-dd'),\n'''')",
+							"type": "Expression"
+						},
+						"httpRequestTimeout": "00:05:00"
+					},
+					"dataset": {
+						"referenceName": "ds_DnA_spo_sources_array",
+						"type": "DatasetReference",
+						"parameters": {
+							"ds_DnA_spoList_Name": {
+								"value": "@json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_DnA_spoList_name",
+								"type": "Expression"
+							},
+							"ds_par_spo_site": {
+								"value": "@json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_SPO_site",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "lkp metadata of Source to Landing from SPO",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SharePointOnlineListSource",
+						"query": {
+							"value": "@concat('$filter=SystemName eq ''',pipeline().parameters.System,''' and StatusValue eq ''Active''')",
+							"type": "Expression"
+						},
+						"httpRequestTimeout": "00:05:00"
+					},
+					"dataset": {
+						"referenceName": "DS_SPO_ITDataGovernanceWorkgroup",
+						"type": "DatasetReference",
+						"parameters": {
+							"List": "SourceToLanding"
+						}
+					},
+					"firstRowOnly": false
+				}
 			}
 		],
 		"parameters": {
-			"pl_par_Tenant_id": {
+			"System": {
 				"type": "string",
-				"defaultValue": "186a9efb-4fc7-4002-8ce2-7844ce804df5"
-			},
-			"pl_par_Client_id": {
-				"type": "string",
-				"defaultValue": "ee0d5326-d204-426c-a1cc-ca06284ab897"
-			},
-			"pl_par_keyVault_SecretsName": {
-				"type": "string",
-				"defaultValue": "secret-value"
-			},
-			"pl_par_KeyVault_URL": {
-				"type": "string",
-				"defaultValue": "https://kv-lakehouse-sandbox-cc.vault.azure.net"
-			},
-			"pl_par_SPO_site": {
-				"type": "string",
-				"defaultValue": "ITDataGovernanceWorkgroup"
-			},
-			"pl_par_ADLS_dst_Path": {
-				"type": "string",
-				"defaultValue": "landing/procurementRaw"
-			},
-			"pl_par_DnA_spoList_name": {
-				"type": "string",
-				"defaultValue": "Yardi"
-			},
-			"pl_adls_storage_account": {
-				"type": "string",
-				"defaultValue": "dlslakehouserawsandboxcc"
+				"defaultValue": "Procurement_Historical"
 			}
 		},
 		"folder": {
-			"name": "IO_procurement"
+			"name": "Procurement"
 		},
-		"annotations": [
-			"lkp_ls: ls_SPO_DnA_http_baseurl",
-			"lkp_ds: ds_DnA_spo_sources_array (sharepoint type))",
-			"copy_src_ds: ds_spo_src, HTTP binary tye",
-			"copy_src_ls: ls_spo_httpServer, http type",
-			"copy_dst_ds: ds_adls_dst, adls, binary",
-			"copy_dst_ls: ADLS_IO, adls type"
-		]
+		"annotations": []
 	}
 }
