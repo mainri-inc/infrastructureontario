@@ -1,0 +1,30 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"value": "mainri-asa-workspace"
+		},
+		"mainri-asa-workspace-WorkspaceDefaultSqlServer_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:mainri-asa-workspace.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"ADLS_IO_properties_typeProperties_url": {
+			"value": "@{concat('https://',linkedService().DataLakehouseStorageAccount,'.dfs.core.windows.net/')}"
+		},
+		"AzureKeyVault_properties_typeProperties_baseUrl": {
+			"value": "https://mainri-key-vault.vault.azure.net/"
+		},
+		"SPO_ITDataGovernanceWorkgroup_properties_typeProperties_servicePrincipalId": {
+			"value": "ee0d5326-d204-426c-a1cc-ca06284ab897"
+		},
+		"ls_SPO_DnA_http_baseUrl_properties_typeProperties_servicePrincipalId": {
+			"value": "ee0d5326-d204-426c-a1cc-ca06284ab897"
+		},
+		"ls_SPO_HttpServer_properties_typeProperties_url": {
+			"value": "@{concat(\n'https://infrastructureontario.sharepoint.com/sites/'\n,linkedService().ls_par_SPO_site\n,'/_api/web/GetFileByServerRelativeUrl('''\n,linkedService().ls_RelativeURL\n,''')/$value'\n)}"
+		},
+		"mainri-asa-workspace-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"value": "https://asamainriadls.dfs.core.windows.net"
+		}
+	}
+}
