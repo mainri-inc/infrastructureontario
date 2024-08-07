@@ -3,7 +3,7 @@
 	"properties": {
 		"parameters": {
 			"DataLakehouseStorageAccount": {
-				"type": "String"
+				"type": "string"
 			}
 		},
 		"annotations": [],
@@ -15,5 +15,6 @@
 			"referenceName": "AutoResolveIntegrationRuntime",
 			"type": "IntegrationRuntimeReference"
 		}
-	}
+	},
+	"type": "Microsoft.Synapse/workspaces/linkedservices"
 }
