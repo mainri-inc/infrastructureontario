@@ -1,7 +1,6 @@
 {
 	"name": "ls_SPO_HttpServer",
 	"properties": {
-		"description": "HTTP - Binary type linked service. Dynamic point to SharePoint HTTP Server",
 		"parameters": {
 			"ls_par_SPO_site": {
 				"type": "string"
@@ -20,6 +19,7 @@
 		"connectVia": {
 			"referenceName": "AutoResolveIntegrationRuntime",
 			"type": "IntegrationRuntimeReference"
-		}
+		},
+		"description": "HTTP - Binary type linked service. Dynamic point to SharePoint HTTP Server"
 	}
 }
