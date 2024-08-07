@@ -1,11 +1,12 @@
 {
 	"name": "SPO_ITDataGovernanceWorkgroup",
+	"type": "Microsoft.Synapse/workspaces/linkedservices",
 	"properties": {
 		"annotations": [],
 		"type": "SharePointOnlineList",
 		"typeProperties": {
 			"siteUrl": "https://infrastructureontario.sharepoint.com/sites/ITDataGovernanceWorkgroup",
-			"tenantId": "b4e0dd60-8ef5-4e7d-b911-0bd199ec4b8e",
+			"tenantId": "186a9efb-4fc7-4002-8ce2-7844ce804df5",
 			"servicePrincipalId": "ee0d5326-d204-426c-a1cc-ca06284ab897",
 			"servicePrincipalKey": {
 				"type": "AzureKeyVaultSecret",
