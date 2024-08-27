@@ -1,0 +1,53 @@
+{
+	"name": "ls_SPO_http_baseUrl",
+	"properties": {
+		"parameters": {
+			"ls_par_siteName": {
+				"type": "string"
+			},
+			"ls_par_appID": {
+				"type": "string"
+			},
+			"ls_par_tenantID": {
+				"type": "string"
+			},
+			"ls_par_access_spn_secret": {
+				"type": "string"
+			},
+			"ls_par_keyvaulturl": {
+				"type": "string"
+			},
+			"ls_par_tenant_name": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "SharePointOnlineList",
+		"typeProperties": {
+			"siteUrl": "@{concat(\n    'https://'\n    , linkedService().ls_par_tenant_name\n    , '.sharepoint.com/sites/'\n    , linkedService().ls_par_siteName\n    )}",
+			"tenantId": "b4e0dd60-8ef5-4e7d-b911-0bd199ec4b8e",
+			"servicePrincipalId": "@{linkedService().ls_par_appID}",
+			"servicePrincipalKey": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_AzureKeyVault",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"ls_par_keyvault_url": {
+							"value": "@linkedService().ls_par_keyvaulturl",
+							"type": "Expression"
+						}
+					}
+				},
+				"secretName": {
+					"value": "@linkedService().ls_par_access_spn_secret",
+					"type": "Expression"
+				}
+			}
+		},
+		"connectVia": {
+			"referenceName": "AutoResolveIntegrationRuntime",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
