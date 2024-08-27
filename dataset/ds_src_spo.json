@@ -1,0 +1,34 @@
+{
+	"name": "ds_src_spo",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_SPO_HttpServer",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"ls_par_SPO_site": {
+					"value": "@dataset().dspar_SPO_site",
+					"type": "Expression"
+				},
+				"ls_RelativeURL": {
+					"value": "@dataset().dsparRelativeURL",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"dspar_SPO_site": {
+				"type": "string"
+			},
+			"dsparRelativeURL": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation"
+			}
+		}
+	}
+}
