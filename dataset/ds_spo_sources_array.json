@@ -1,21 +1,53 @@
 {
-	"name": "ds_DnA_spo_sources_array",
+	"name": "ds_spo_sources_array",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "ls_SPO_DnA_http_baseUrl",
+			"referenceName": "ls_SPO_http_baseUrl",
 			"type": "LinkedServiceReference",
 			"parameters": {
-				"ls_siteName": {
-					"value": "@dataset().ds_par_spo_site",
+				"ls_par_siteName": "@dataset().ds_par_spo_site",
+				"ls_par_appID": {
+					"value": "@dataset().ds_par_appID",
+					"type": "Expression"
+				},
+				"ls_par_tenantID": {
+					"value": "@dataset().ds_par_tenantID",
+					"type": "Expression"
+				},
+				"ls_par_access_spn_secret": {
+					"value": "@dataset().ds_par_access_spn_secret",
+					"type": "Expression"
+				},
+				"ls_par_keyvaulturl": {
+					"value": "@dataset().ds_par_keyvaulturl",
+					"type": "Expression"
+				},
+				"ls_par_tenant_name": {
+					"value": "@dataset().ds_par_tenant_name",
 					"type": "Expression"
 				}
 			}
 		},
 		"parameters": {
-			"ds_DnA_spoList_Name": {
+			"ds_par_spoList_Name": {
 				"type": "string"
 			},
 			"ds_par_spo_site": {
+				"type": "string"
+			},
+			"ds_par_keyvaulturl": {
+				"type": "string"
+			},
+			"ds_par_access_spn_secret": {
+				"type": "string"
+			},
+			"ds_par_appID": {
+				"type": "string"
+			},
+			"ds_par_tenantID": {
+				"type": "string"
+			},
+			"ds_par_tenant_name": {
 				"type": "string"
 			}
 		},
@@ -24,7 +56,7 @@
 		"schema": [],
 		"typeProperties": {
 			"listName": {
-				"value": "@dataset().ds_DnA_spoList_Name",
+				"value": "@dataset().ds_par_spoList_Name",
 				"type": "Expression"
 			}
 		}
