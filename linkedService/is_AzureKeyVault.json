@@ -1,0 +1,16 @@
+{
+	"name": "is_AzureKeyVault",
+	"properties": {
+		"parameters": {
+			"ls_par_keyvault_url": {
+				"type": "string",
+				"defaultValue": "https://kv-dalakehouse-qa-cc.vault.azure.net"
+			}
+		},
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "@{linkedService().ls_par_keyvault_url}"
+		}
+	}
+}
