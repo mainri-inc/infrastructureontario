@@ -1,0 +1,26 @@
+{
+	"name": "AzureSqlTable_dep",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_mainri_sqldb",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "depid",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "dep",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "dep"
+		}
+	}
+}
