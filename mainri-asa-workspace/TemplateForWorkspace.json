@@ -7,6 +7,10 @@
 			"metadata": "Workspace name",
 			"defaultValue": "mainri-asa-workspace"
 		},
+		"ls_mainri_sqldb_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'ls_mainri_sqldb'"
+		},
 		"mainri-asa-workspace-WorkspaceDefaultSqlServer_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'mainri-asa-workspace-WorkspaceDefaultSqlServer'",
@@ -24,6 +28,10 @@
 			"type": "string",
 			"defaultValue": "ee0d5326-d204-426c-a1cc-ca06284ab897"
 		},
+		"ls_AzureKeyVault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "@{linkedService().ls_par_keyvault_url}"
+		},
 		"ls_SPO_DnA_http_baseUrl_properties_typeProperties_servicePrincipalId": {
 			"type": "string",
 			"defaultValue": "ee0d5326-d204-426c-a1cc-ca06284ab897"
@@ -31,6 +39,22 @@
 		"ls_SPO_HttpServer_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "@{concat(\n'https://infrastructureontario.sharepoint.com/sites/'\n,linkedService().ls_par_SPO_site\n,'/_api/web/GetFileByServerRelativeUrl('''\n,linkedService().ls_RelativeURL\n,''')/$value'\n)}"
+		},
+		"ls_SPO_http_baseUrl_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "@{linkedService().ls_par_appID}"
+		},
+		"ls_mainri_sqldb_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "mainri-sqldb.database.windows.net"
+		},
+		"ls_mainri_sqldb_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "mainri-sqldb"
+		},
+		"ls_mainri_sqldb_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "ErjunChen"
 		},
 		"mainri-asa-workspace-WorkspaceDefaultStorage_properties_typeProperties_url": {
 			"type": "string",
@@ -42,7 +66,7 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('workspaceName'), '/pl_procurement_DnA_SPO_src_to_adls')]",
+			"name": "[concat(parameters('workspaceName'), '/PL_DnA_OpenSource_Daily_Run')]",
 			"type": "Microsoft.Synapse/workspaces/pipelines",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -62,7 +86,7 @@
 							"timeout": "0.12:00:00",
 							"retry": 0,
 							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
+							"secureOutput": true,
 							"secureInput": false
 						},
 						"userProperties": [],
@@ -80,7 +104,7 @@
 								"type": "IntegrationRuntimeReference"
 							},
 							"body": {
-								"value": "@{concat('grant_type=client_credentials&client_id='\n, json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_Client_id\n\n, '@'\n\n, json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_Tenant_id\n\n,'&client_secret='\n\n, activity('Get_Client_Secret').output.value\n\n, '&resource=00000003-0000-0ff1-ce00-000000000000/infrastructureontario.sharepoint.com@'\n\n, json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_Tenant_id\n\n)}",
+								"value": "@{concat('grant_type=client_credentials&client_id='\n, json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_Client_id\n\n, '@'\n\n, json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_Tenant_id\n\n,'&client_secret='\n\n, activity('Get_Client_Secret').output.value\n\n, '&resource=00000003-0000-0ff1-ce00-000000000000/'\n\n, json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_Tenant_name\n\n, '.sharepoint.com@'\n\n, json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_Tenant_id\n\n)}",
 								"type": "Expression"
 							}
 						}
@@ -100,7 +124,7 @@
 							"timeout": "0.12:00:00",
 							"retry": 0,
 							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
+							"secureOutput": true,
 							"secureInput": false
 						},
 						"userProperties": [],
@@ -202,7 +226,7 @@
 													"type": "Expression"
 												},
 												"ds_par_dstpath": {
-													"value": "@json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_ADLS_dst_Path",
+													"value": "@concat('landing/',\nreplace(replace(activity('lkp metadata of Source to Landing from SPO').output.value[0].LandingPath,'/<<yyyy-MM-dd>>', '')\n,'<<fileversion>>',activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceFileVersion)\n)\n",
 													"type": "Expression"
 												},
 												"ds_par_dst_filename": {
@@ -231,7 +255,7 @@
 							"timeout": "0.12:00:00",
 							"retry": 0,
 							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
+							"secureOutput": true,
 							"secureInput": false
 						},
 						"userProperties": [],
@@ -239,21 +263,41 @@
 							"source": {
 								"type": "SharePointOnlineListSource",
 								"query": {
-									"value": "@concat('$filter=ContentType eq ','''Document'''\n, ' and '\n,'Modified ge datetime'''\n,formatDateTime(addDays(utcNow()\n,json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_Inspecting_Offset_Day),'yyyy-MM-dd'),\n'''')",
+									"value": "@concat('$filter=ContentType eq ','''Document'''\n, ' and Path eq '\n,'''/sites/AnalyticsandDataGovernance/Shared Documents/DA27-PanCanada Major Projects Data Automation/04 - Raw Data'''\n, ' and '\n,'Modified ge datetime'''\n,formatDateTime(addDays(utcNow()\n,json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_Inspecting_Offset_Day),'yyyy-MM-dd'),\n'''')",
 									"type": "Expression"
 								},
 								"httpRequestTimeout": "00:05:00"
 							},
 							"dataset": {
-								"referenceName": "ds_DnA_spo_sources_array",
+								"referenceName": "ds_spo_sources_array",
 								"type": "DatasetReference",
 								"parameters": {
-									"ds_DnA_spoList_Name": {
+									"ds_par_spoList_Name": {
 										"value": "@json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_DnA_spoList_name",
 										"type": "Expression"
 									},
 									"ds_par_spo_site": {
 										"value": "@json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_SPO_site",
+										"type": "Expression"
+									},
+									"ds_par_keyvaulturl": {
+										"value": "@json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_KeyVault_URL",
+										"type": "Expression"
+									},
+									"ds_par_access_spn_secret": {
+										"value": "@json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_keyVault_SecretsName",
+										"type": "Expression"
+									},
+									"ds_par_appID": {
+										"value": "@json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_Client_id",
+										"type": "Expression"
+									},
+									"ds_par_tenantID": {
+										"value": "@json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_Tenant_id",
+										"type": "Expression"
+									},
+									"ds_par_tenant_name": {
+										"value": "@json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_Tenant_name",
 										"type": "Expression"
 									}
 								}
@@ -269,7 +313,7 @@
 							"timeout": "0.12:00:00",
 							"retry": 0,
 							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
+							"secureOutput": true,
 							"secureInput": false
 						},
 						"userProperties": [],
@@ -303,16 +347,47 @@
 					}
 				},
 				"folder": {
-					"name": "Procurement"
+					"name": "DnA_OpenSource"
 				},
 				"annotations": []
 			},
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]",
-				"[concat(variables('workspaceId'), '/datasets/ds_DnA_spo_sources_array')]",
+				"[concat(variables('workspaceId'), '/datasets/ds_spo_sources_array')]",
 				"[concat(variables('workspaceId'), '/datasets/DS_SPO_ITDataGovernanceWorkgroup')]",
 				"[concat(variables('workspaceId'), '/datasets/ds_spo_src')]",
 				"[concat(variables('workspaceId'), '/datasets/ds_adls_dst')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/AzureSqlTable_dep')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_mainri_sqldb",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "depid",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "dep",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "dep"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/ls_mainri_sqldb')]"
 			]
 		},
 		{
@@ -341,43 +416,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/linkedServices/SPO_ITDataGovernanceWorkgroup')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/ds_DnA_spo_sources_array')]",
-			"type": "Microsoft.Synapse/workspaces/datasets",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_SPO_DnA_http_baseUrl",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"ls_siteName": {
-							"value": "@dataset().ds_par_spo_site",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"ds_DnA_spoList_Name": {
-						"type": "string"
-					},
-					"ds_par_spo_site": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "SharePointOnlineListResource",
-				"schema": [],
-				"typeProperties": {
-					"listName": {
-						"value": "@dataset().ds_DnA_spoList_Name",
-						"type": "Expression"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/linkedServices/ls_SPO_DnA_http_baseUrl')]"
 			]
 		},
 		{
@@ -427,6 +465,75 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/ds_spo_sources_array')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_SPO_http_baseUrl",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"ls_par_siteName": "@dataset().ds_par_spo_site",
+						"ls_par_appID": {
+							"value": "@dataset().ds_par_appID",
+							"type": "Expression"
+						},
+						"ls_par_tenantID": {
+							"value": "@dataset().ds_par_tenantID",
+							"type": "Expression"
+						},
+						"ls_par_access_spn_secret": {
+							"value": "@dataset().ds_par_access_spn_secret",
+							"type": "Expression"
+						},
+						"ls_par_keyvaulturl": {
+							"value": "@dataset().ds_par_keyvaulturl",
+							"type": "Expression"
+						},
+						"ls_par_tenant_name": {
+							"value": "@dataset().ds_par_tenant_name",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"ds_par_spoList_Name": {
+						"type": "string"
+					},
+					"ds_par_spo_site": {
+						"type": "string"
+					},
+					"ds_par_keyvaulturl": {
+						"type": "string"
+					},
+					"ds_par_access_spn_secret": {
+						"type": "string"
+					},
+					"ds_par_appID": {
+						"type": "string"
+					},
+					"ds_par_tenantID": {
+						"type": "string"
+					},
+					"ds_par_tenant_name": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "SharePointOnlineListResource",
+				"schema": [],
+				"typeProperties": {
+					"listName": {
+						"value": "@dataset().ds_par_spoList_Name",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/ls_SPO_http_baseUrl')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/ds_spo_src')]",
 			"type": "Microsoft.Synapse/workspaces/datasets",
 			"apiVersion": "2019-06-01-preview",
@@ -450,6 +557,45 @@
 						"type": "string"
 					},
 					"ls_par_SPO_site": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/ls_SPO_HttpServer')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ds_src_spo')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_SPO_HttpServer",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"ls_par_SPO_site": {
+							"value": "@dataset().dspar_SPO_site",
+							"type": "Expression"
+						},
+						"ls_RelativeURL": {
+							"value": "@dataset().dsparRelativeURL",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"dspar_SPO_site": {
+						"type": "string"
+					},
+					"dsparRelativeURL": {
 						"type": "string"
 					}
 				},
@@ -547,6 +693,25 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/ls_AzureKeyVault')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"parameters": {
+					"ls_par_keyvault_url": {
+						"type": "String",
+						"defaultValue": "https://kv-dalakehouse-qa-cc.vault.azure.net"
+					}
+				},
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('ls_AzureKeyVault_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/ls_SPO_DnA_http_baseUrl')]",
 			"type": "Microsoft.Synapse/workspaces/linkedServices",
 			"apiVersion": "2019-06-01-preview",
@@ -602,6 +767,93 @@
 					"url": "[parameters('ls_SPO_HttpServer_properties_typeProperties_url')]",
 					"enableServerCertificateValidation": true,
 					"authenticationType": "Anonymous"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ls_SPO_http_baseUrl')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"parameters": {
+					"ls_par_siteName": {
+						"type": "string"
+					},
+					"ls_par_appID": {
+						"type": "string"
+					},
+					"ls_par_tenantID": {
+						"type": "string"
+					},
+					"ls_par_access_spn_secret": {
+						"type": "string"
+					},
+					"ls_par_keyvaulturl": {
+						"type": "string"
+					},
+					"ls_par_tenant_name": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "SharePointOnlineList",
+				"typeProperties": {
+					"siteUrl": "@{concat(\n    'https://'\n    , linkedService().ls_par_tenant_name\n    , '.sharepoint.com/sites/'\n    , linkedService().ls_par_siteName\n    )}",
+					"tenantId": "b4e0dd60-8ef5-4e7d-b911-0bd199ec4b8e",
+					"servicePrincipalId": "[parameters('ls_SPO_http_baseUrl_properties_typeProperties_servicePrincipalId')]",
+					"servicePrincipalKey": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ls_AzureKeyVault",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"ls_par_keyvault_url": {
+									"value": "@linkedService().ls_par_keyvaulturl",
+									"type": "Expression"
+								}
+							}
+						},
+						"secretName": {
+							"value": "@linkedService().ls_par_access_spn_secret",
+							"type": "Expression"
+						}
+					}
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]",
+				"[concat(variables('workspaceId'), '/linkedServices/ls_AzureKeyVault')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ls_mainri_sqldb')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('ls_mainri_sqldb_properties_typeProperties_server')]",
+					"database": "[parameters('ls_mainri_sqldb_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('ls_mainri_sqldb_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('ls_mainri_sqldb_password')]"
+					}
 				},
 				"connectVia": {
 					"referenceName": "AutoResolveIntegrationRuntime",
@@ -681,6 +933,322 @@
 			"properties": {
 				"type": "ManagedIdentity",
 				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/mainri_adls_ext_data')]",
+			"type": "Microsoft.Synapse/workspaces/databases",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"Ddls": [
+					{
+						"ActionType": "CREATE",
+						"OldEntity": null,
+						"NewEntity": {
+							"Name": "mainri_adls_ext_data",
+							"EntityType": "DATABASE",
+							"Origin": {
+								"Type": "SPARK"
+							},
+							"Properties": {
+								"IsSyMSCDMDatabase": true
+							},
+							"Source": {
+								"Provider": "ADLS",
+								"Location": "abfss://mainri-asa-file-system@asamainriadls.dfs.core.windows.net/mainri_adls_ext_data",
+								"Properties": {
+									"FormatType": "csv",
+									"LinkedServiceName": "mainri-asa-workspace-WorkspaceDefaultStorage"
+								}
+							}
+						},
+						"Source": {
+							"Type": "SPARK"
+						}
+					},
+					{
+						"ActionType": "CREATE",
+						"OldEntity": null,
+						"NewEntity": {
+							"Name": "tb_ext_personal_contact",
+							"EntityType": "TABLE",
+							"Namespace": {
+								"DatabaseName": "mainri_adls_ext_data"
+							},
+							"Description": "",
+							"TableType": "EXTERNAL",
+							"Origin": {
+								"Type": "SPARK"
+							},
+							"StorageDescriptor": {
+								"Columns": [
+									{
+										"Name": "id",
+										"OriginDataTypeName": {
+											"TypeName": "integer",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Properties": {
+												"HIVE_TYPE_STRING": "integer"
+											}
+										},
+										"DeltaFormatInvalidMessages": []
+									},
+									{
+										"Name": "name",
+										"OriginDataTypeName": {
+											"TypeName": "string",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 8000,
+											"Properties": {
+												"HIVE_TYPE_STRING": "string"
+											}
+										},
+										"DeltaFormatInvalidMessages": []
+									},
+									{
+										"Name": "email",
+										"OriginDataTypeName": {
+											"TypeName": "string",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 8000,
+											"Properties": {
+												"HIVE_TYPE_STRING": "string"
+											}
+										},
+										"DeltaFormatInvalidMessages": []
+									},
+									{
+										"Name": "phone",
+										"OriginDataTypeName": {
+											"TypeName": "string",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 256,
+											"Properties": {
+												"HIVE_TYPE_STRING": "string"
+											}
+										},
+										"DeltaFormatInvalidMessages": []
+									},
+									{
+										"Name": "mobile",
+										"OriginDataTypeName": {
+											"TypeName": "string",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 256,
+											"Properties": {
+												"HIVE_TYPE_STRING": "string"
+											}
+										},
+										"DeltaFormatInvalidMessages": []
+									},
+									{
+										"Name": "other",
+										"OriginDataTypeName": {
+											"TypeName": "string",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 256,
+											"Properties": {
+												"HIVE_TYPE_STRING": "string"
+											}
+										},
+										"DeltaFormatInvalidMessages": []
+									}
+								],
+								"Format": {
+									"InputFormat": "org.apache.hadoop.mapred.SequenceFileInputFormat",
+									"OutputFormat": "org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat",
+									"FormatType": "csv",
+									"SerializeLib": "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe",
+									"Properties": {
+										"path": "abfss://mainri-asa-file-system@asamainriadls.dfs.core.windows.net/raw/Person_contact.csv",
+										"delimiter": ",",
+										"multiLine": "false",
+										"firstRowAsHeader": "true",
+										"serialization.format": "1",
+										"FormatTypeSetToDatabaseDefault": false,
+										"header": "true"
+									}
+								},
+								"Source": {
+									"Provider": "ADLS",
+									"Location": "abfss://mainri-asa-file-system@asamainriadls.dfs.core.windows.net/raw/Person_contact.csv",
+									"Properties": {
+										"LinkedServiceName": "mainri-asa-workspace-WorkspaceDefaultStorage",
+										"LocationSetToDatabaseDefault": false
+									}
+								},
+								"Properties": {
+									"textinputformat.record.delimiter": ",",
+									"compression": "",
+									"derivedModelAttributeInfo": "{\"attributeReferences\":{}}"
+								},
+								"Compressed": false,
+								"IsStoredAsSubdirectories": false
+							},
+							"Properties": {
+								"Description": "",
+								"DisplayFolderInfo": "{\"name\":\"Others\",\"colorCode\":\"\"}",
+								"PrimaryKeys": "",
+								"spark.sql.sources.provider": "csv"
+							},
+							"Retention": 0,
+							"Temporary": false,
+							"IsRewriteEnabled": false,
+							"Partitioning": {}
+						},
+						"Source": {
+							"Type": "SPARK"
+						}
+					},
+					{
+						"ActionType": "CREATE",
+						"OldEntity": null,
+						"NewEntity": {
+							"Name": "tb_ext_name",
+							"EntityType": "TABLE",
+							"Namespace": {
+								"DatabaseName": "mainri_adls_ext_data"
+							},
+							"Description": "",
+							"TableType": "EXTERNAL",
+							"Origin": {
+								"Type": "SPARK"
+							},
+							"StorageDescriptor": {
+								"Columns": [
+									{
+										"Name": "name",
+										"OriginDataTypeName": {
+											"TypeName": "string",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 256,
+											"Properties": {
+												"HIVE_TYPE_STRING": "string"
+											}
+										},
+										"DeltaFormatInvalidMessages": []
+									},
+									{
+										"Name": "age",
+										"OriginDataTypeName": {
+											"TypeName": "short",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Properties": {
+												"HIVE_TYPE_STRING": "short"
+											}
+										},
+										"DeltaFormatInvalidMessages": []
+									},
+									{
+										"Name": "gander",
+										"OriginDataTypeName": {
+											"TypeName": "string",
+											"IsComplexType": false,
+											"IsNullable": true,
+											"Length": 50,
+											"Properties": {
+												"HIVE_TYPE_STRING": "string"
+											}
+										},
+										"DeltaFormatInvalidMessages": []
+									},
+									{
+										"Name": "Name_id",
+										"Description": "",
+										"OriginDataTypeName": {
+											"TypeName": "integer",
+											"IsNullable": false,
+											"IsComplexType": false,
+											"Properties": {
+												"HIVE_TYPE_STRING": "integer"
+											}
+										},
+										"DeltaFormatInvalidMessages": []
+									}
+								],
+								"Format": {
+									"InputFormat": "org.apache.hadoop.mapred.SequenceFileInputFormat",
+									"OutputFormat": "org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat",
+									"FormatType": "csv",
+									"SerializeLib": "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe",
+									"Properties": {
+										"path": "abfss://mainri-asa-file-system@asamainriadls.dfs.core.windows.net/raw/name.csv",
+										"delimiter": ",",
+										"multiLine": "false",
+										"firstRowAsHeader": "true",
+										"serialization.format": "1",
+										"FormatTypeSetToDatabaseDefault": false,
+										"header": "true"
+									}
+								},
+								"Source": {
+									"Provider": "ADLS",
+									"Location": "abfss://mainri-asa-file-system@asamainriadls.dfs.core.windows.net/raw/name.csv",
+									"Properties": {
+										"LinkedServiceName": "mainri-asa-workspace-WorkspaceDefaultStorage",
+										"LocationSetToDatabaseDefault": false
+									}
+								},
+								"Properties": {
+									"textinputformat.record.delimiter": ",",
+									"compression": "",
+									"derivedModelAttributeInfo": "{\"attributeReferences\":{}}"
+								},
+								"Compressed": false,
+								"IsStoredAsSubdirectories": false
+							},
+							"Properties": {
+								"Description": "",
+								"DisplayFolderInfo": "{\"name\":\"Others\",\"colorCode\":\"\"}",
+								"PrimaryKeys": "Name_id",
+								"spark.sql.sources.provider": "csv"
+							},
+							"Retention": 0,
+							"Temporary": false,
+							"IsRewriteEnabled": false,
+							"Partitioning": {}
+						},
+						"Source": {
+							"Type": "SPARK"
+						}
+					},
+					{
+						"ActionType": "CREATE",
+						"OldEntity": null,
+						"NewEntity": {
+							"Name": "relationship-dsjotxpmty",
+							"EntityType": "RELATIONSHIP",
+							"Namespace": {
+								"DatabaseName": "mainri_adls_ext_data"
+							},
+							"Origin": {
+								"Type": "SPARK"
+							},
+							"FromTableName": "tb_ext_name",
+							"ToTableName": "tb_ext_personal_contact",
+							"ColumnRelationshipInformations": [
+								{
+									"FromColumnName": "Name_id",
+									"ToColumnName": "id"
+								}
+							],
+							"RelationshipType": 0,
+							"Properties": {}
+						},
+						"Source": {
+							"Type": "SPARK"
+						}
+					}
+				]
 			},
 			"dependsOn": []
 		}

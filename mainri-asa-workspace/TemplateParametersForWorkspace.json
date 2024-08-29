@@ -5,6 +5,9 @@
 		"workspaceName": {
 			"value": "mainri-asa-workspace"
 		},
+		"ls_mainri_sqldb_password": {
+			"value": ""
+		},
 		"mainri-asa-workspace-WorkspaceDefaultSqlServer_connectionString": {
 			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:mainri-asa-workspace.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
 		},
@@ -17,11 +20,26 @@
 		"SPO_ITDataGovernanceWorkgroup_properties_typeProperties_servicePrincipalId": {
 			"value": "ee0d5326-d204-426c-a1cc-ca06284ab897"
 		},
+		"ls_AzureKeyVault_properties_typeProperties_baseUrl": {
+			"value": "@{linkedService().ls_par_keyvault_url}"
+		},
 		"ls_SPO_DnA_http_baseUrl_properties_typeProperties_servicePrincipalId": {
 			"value": "ee0d5326-d204-426c-a1cc-ca06284ab897"
 		},
 		"ls_SPO_HttpServer_properties_typeProperties_url": {
 			"value": "@{concat(\n'https://infrastructureontario.sharepoint.com/sites/'\n,linkedService().ls_par_SPO_site\n,'/_api/web/GetFileByServerRelativeUrl('''\n,linkedService().ls_RelativeURL\n,''')/$value'\n)}"
+		},
+		"ls_SPO_http_baseUrl_properties_typeProperties_servicePrincipalId": {
+			"value": "@{linkedService().ls_par_appID}"
+		},
+		"ls_mainri_sqldb_properties_typeProperties_server": {
+			"value": "mainri-sqldb.database.windows.net"
+		},
+		"ls_mainri_sqldb_properties_typeProperties_database": {
+			"value": "mainri-sqldb"
+		},
+		"ls_mainri_sqldb_properties_typeProperties_userName": {
+			"value": "ErjunChen"
 		},
 		"mainri-asa-workspace-WorkspaceDefaultStorage_properties_typeProperties_url": {
 			"value": "https://asamainriadls.dfs.core.windows.net"
