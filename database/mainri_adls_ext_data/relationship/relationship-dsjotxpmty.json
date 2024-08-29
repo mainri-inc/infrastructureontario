@@ -1,0 +1,23 @@
+{
+	"name": "relationship-dsjotxpmty",
+	"properties": {
+		"Name": "relationship-dsjotxpmty",
+		"EntityType": "RELATIONSHIP",
+		"Namespace": {
+			"DatabaseName": "mainri_adls_ext_data"
+		},
+		"Origin": {
+			"Type": "SPARK"
+		},
+		"FromTableName": "tb_ext_name",
+		"ToTableName": "tb_ext_personal_contact",
+		"ColumnRelationshipInformations": [
+			{
+				"FromColumnName": "Name_id",
+				"ToColumnName": "id"
+			}
+		],
+		"RelationshipType": 0
+	},
+	"type": "RELATIONSHIP"
+}
