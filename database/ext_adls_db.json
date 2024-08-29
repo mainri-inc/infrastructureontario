@@ -1,0 +1,22 @@
+{
+	"name": "ext_adls_db",
+	"properties": {
+		"Name": "ext_adls_db",
+		"EntityType": "DATABASE",
+		"Origin": {
+			"Type": "SPARK"
+		},
+		"Properties": {
+			"IsSyMSCDMDatabase": true
+		},
+		"Source": {
+			"Provider": "ADLS",
+			"Location": "abfss://mainri-asa-file-system@asamainriadls.dfs.core.windows.net/ext_adls_db",
+			"Properties": {
+				"FormatType": "csv",
+				"LinkedServiceName": "mainri-asa-workspace-WorkspaceDefaultStorage"
+			}
+		}
+	},
+	"type": "DATABASE"
+}
