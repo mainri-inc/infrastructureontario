@@ -1,0 +1,17 @@
+{
+	"name": "SQL script create external data source",
+	"properties": {
+		"content": {
+			"query": "--Create a Credential:\nCREATE DATABASE SCOPED CREDENTIAL MyStorageCredential\nWITH IDENTITY = 'SHARED ACCESS SIGNATURE',\nSECRET = '<your-SAS-token>';\n\n--Create an External Table\nCREATE EXTERNAL TABLE MyExternalTable (\n    Column1 INT,\n    Column2 NVARCHAR(50),\n    Column3 DATETIME\n)\nWITH (\n    LOCATION = '/path/to/data.csv',\n    DATA_SOURCE = MyExternalDataSource,\n    FILE_FORMAT = MyFileFormat -- You need to define a file format\n);\n\n--Query the External Data\nSELECT *\nFROM OPENROWSET(\n    BULK '/path/to/data.csv',\n    DATA_SOURCE = 'MyExternalDataSource',\n    FORMAT = 'CSV',\n    FIELDTERMINATOR = ',',\n    ROWTERMINATOR = '\\n'\n) AS MyData;\n\n--Create and Use a File Format (Optional)\nCREATE EXTERNAL FILE FORMAT MyFileFormat\nWITH (\n    FORMAT_TYPE = DELIMITEDTEXT,\n    FORMAT_OPTIONS (FIELD_TERMINATOR = ',', STRING_DELIMITER = '\"')\n);\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "Built-in",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
