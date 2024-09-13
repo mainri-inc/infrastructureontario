@@ -1,0 +1,130 @@
+{
+	"name": "PL_DnA_Copy_Files",
+	"properties": {
+		"activities": [
+			{
+				"name": "Traversing_SPO_Directory",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.subpl_par_items",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "dumping_source_from_spo_to_adls",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "BinarySource",
+									"storeSettings": {
+										"type": "HttpReadSettings",
+										"requestMethod": "GET",
+										"additionalHeaders": {
+											"value": "@{concat('Authorization: Bearer '\n,pipeline().parameters.subpl_par_token\n)}",
+											"type": "Expression"
+										},
+										"requestTimeout": ""
+									},
+									"formatSettings": {
+										"type": "BinaryReadSettings"
+									}
+								},
+								"sink": {
+									"type": "BinarySink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_spo_src",
+									"type": "DatasetReference",
+									"parameters": {
+										"RelativeURL": {
+											"value": "@{\n    concat(\n        item().Path\n        ,'/'\n        ,item().Name\n    )\n}",
+											"type": "Expression"
+										},
+										"ls_par_SPO_site": {
+											"value": "@json(pipeline().parameters.subpl_par_SourceParameterJSON).pl_par_SPO_site",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_adls_dst",
+									"type": "DatasetReference",
+									"parameters": {
+										"storage_Account": {
+											"value": "@json(pipeline().parameters.subpl_par_SourceParameterJSON).pl_adls_storage_account",
+											"type": "Expression"
+										},
+										"ds_par_dstpath": {
+											"value": "@concat('landing/',\nreplace(replace(pipeline().parameters.subpl_par_dstpath,'/<<yyyy-MM-dd>>', '')\n,'<<fileversion>>',pipeline().parameters.subpl_par_SourceFileVersion)\n)",
+											"type": "Expression"
+										},
+										"ds_par_dst_filename": {
+											"value": "@{\n\n        replace(\n            concat(\n                'rundate='\n                , formatDateTime(convertTimeZone(utcNow(),'UTC' ,'Eastern Standard Time' ),'yyyy-MM-dd')\n                , item().path\n                , '/'\n                , item().Name\n\n            )\n            , '/sites', ''\n        )\n\n}",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"subpl_par_items": {
+				"type": "array"
+			},
+			"subpl_par_token": {
+				"type": "string"
+			},
+			"subpl_par_SourceParameterJSON": {
+				"type": "string"
+			},
+			"subpl_par_dstpath": {
+				"type": "string"
+			},
+			"subpl_par_SourceFileVersion": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"v_item": {
+				"type": "Array"
+			},
+			"v_token": {
+				"type": "String"
+			},
+			"v_sourceParameterJson": {
+				"type": "String"
+			},
+			"v_dstpath": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "DnA_OpenSource"
+		},
+		"annotations": []
+	}
+}

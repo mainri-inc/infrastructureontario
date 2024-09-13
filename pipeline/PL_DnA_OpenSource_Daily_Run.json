@@ -76,101 +76,6 @@
 				}
 			},
 			{
-				"name": "Traversing_SPO_Directory",
-				"type": "ForEach",
-				"dependsOn": [
-					{
-						"activity": "Lookup_DnA_spo_Sources_array",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"items": {
-						"value": "@activity('Lookup_DnA_spo_Sources_array').output.value",
-						"type": "Expression"
-					},
-					"isSequential": true,
-					"activities": [
-						{
-							"name": "dumping_source_from_spo_to_adls",
-							"type": "Copy",
-							"dependsOn": [],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"source": {
-									"type": "BinarySource",
-									"storeSettings": {
-										"type": "HttpReadSettings",
-										"requestMethod": "GET",
-										"additionalHeaders": {
-											"value": "@{concat('Authorization: Bearer '\n,activity('Get_SPO_Token').output.access_token\n)}",
-											"type": "Expression"
-										},
-										"requestTimeout": ""
-									},
-									"formatSettings": {
-										"type": "BinaryReadSettings"
-									}
-								},
-								"sink": {
-									"type": "BinarySink",
-									"storeSettings": {
-										"type": "AzureBlobFSWriteSettings"
-									}
-								},
-								"enableStaging": false
-							},
-							"inputs": [
-								{
-									"referenceName": "ds_spo_src",
-									"type": "DatasetReference",
-									"parameters": {
-										"RelativeURL": {
-											"value": "@{\n    concat(\n        item().Path\n        ,'/'\n        ,item().Name\n    )\n}",
-											"type": "Expression"
-										},
-										"ls_par_SPO_site": {
-											"value": "@json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_par_SPO_site",
-											"type": "Expression"
-										}
-									}
-								}
-							],
-							"outputs": [
-								{
-									"referenceName": "ds_adls_dst",
-									"type": "DatasetReference",
-									"parameters": {
-										"storage_Account": {
-											"value": "@json(activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJSON).pl_adls_storage_account",
-											"type": "Expression"
-										},
-										"ds_par_dstpath": {
-											"value": "@concat('landing/',\nreplace(replace(activity('lkp metadata of Source to Landing from SPO').output.value[0].LandingPath,'/<<yyyy-MM-dd>>', '')\n,'<<fileversion>>',activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceFileVersion)\n)\n",
-											"type": "Expression"
-										},
-										"ds_par_dst_filename": {
-											"value": "@{\n\n        replace(\n            concat(\n                'rundate='\n                , formatDateTime(convertTimeZone(utcNow(),'UTC' ,'Eastern Standard Time' ),'yyyy-MM-dd')\n                , item().path\n                , '/'\n                , item().Name\n\n            )\n            , '/sites', ''\n        )\n\n}",
-											"type": "Expression"
-										}
-									}
-								}
-							]
-						}
-					]
-				}
-			},
-			{
 				"name": "Lookup_DnA_spo_Sources_array",
 				"type": "Lookup",
 				"dependsOn": [
@@ -264,6 +169,65 @@
 						}
 					},
 					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "whether have files to be copied or not",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Lookup_DnA_spo_Sources_array",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@contains(activity('Lookup_DnA_spo_Sources_array').output.value[0], 'name')",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Execute pl_DnA_copy_file",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_DnA_Copy_Files",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"subpl_par_items": {
+										"value": "@activity('Lookup_DnA_spo_Sources_array').output.value",
+										"type": "Expression"
+									},
+									"subpl_par_token": {
+										"value": "@activity('Get_SPO_Token').output.access_token",
+										"type": "Expression"
+									},
+									"subpl_par_SourceParameterJSON": {
+										"value": "@activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceParameterJson",
+										"type": "Expression"
+									},
+									"subpl_par_dstpath": {
+										"value": "@activity('lkp metadata of Source to Landing from SPO').output.value[0].LandingPath",
+										"type": "Expression"
+									},
+									"subpl_par_SourceFileVersion": {
+										"value": "@activity('lkp metadata of Source to Landing from SPO').output.value[0].SourceFileVersion",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
 				}
 			}
 		],
